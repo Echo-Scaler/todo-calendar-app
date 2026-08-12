@@ -646,3 +646,8 @@ xcodebuild -project HolidayCalendar.xcodeproj \
 | 22 | `SwiftDataManager.swift` | SwiftData config (placeholder) |
 | 23 | `APIClient.swift` | API client (placeholder) |
 | 24 | `APIError.swift` | API error types (placeholder) |
+
+
+
+
+if there is no need remove Holiday
