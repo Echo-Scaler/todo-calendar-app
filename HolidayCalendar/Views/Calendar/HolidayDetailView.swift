@@ -1,8 +1,18 @@
 import SwiftUI
 
-/// Holiday detail screen — Phase 4 မှာ implement လုပ်ပါမယ်
+/// HolidayDetailView placeholder
+/// Rule 3.5: Empty placeholder view
 struct HolidayDetailView: View {
     var body: some View {
-        Text("Holiday Detail")
+        VStack {
+            Text("Holiday Detail Placeholder")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .navigationTitle("Holiday Detail")
     }
+}
+
+#Preview {
+    HolidayDetailView()
 }

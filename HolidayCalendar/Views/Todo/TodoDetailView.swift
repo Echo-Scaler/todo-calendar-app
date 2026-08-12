@@ -1,8 +1,18 @@
 import SwiftUI
 
-/// Todo detail screen — Phase 5 မှာ implement လုပ်ပါမယ်
+/// TodoDetailView placeholder
+/// Rule 3.5: Empty placeholder view
 struct TodoDetailView: View {
     var body: some View {
-        Text("Todo Detail")
+        VStack {
+            Text("Todo Detail Placeholder")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .navigationTitle("Todo Detail")
     }
+}
+
+#Preview {
+    TodoDetailView()
 }

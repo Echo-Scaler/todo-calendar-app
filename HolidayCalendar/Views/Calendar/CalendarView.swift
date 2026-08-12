@@ -1,8 +1,20 @@
 import SwiftUI
 
-/// Calendar screen — Phase 3 မှာ implement လုပ်ပါမယ်
+/// CalendarView placeholder
+/// Rule 3.2: NavigationStack နဲ့ .navigationTitle() ပါဝင်ရမည်
 struct CalendarView: View {
     var body: some View {
-        Text("Calendar")
+        NavigationStack {
+            VStack {
+                Text("Calendar Screen")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+            }
+            .navigationTitle("Calendar")
+        }
     }
+}
+
+#Preview {
+    CalendarView()
 }
