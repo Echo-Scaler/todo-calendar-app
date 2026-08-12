@@ -110,12 +110,14 @@ struct TodoDetailView: View {
         let finalReminderDate: Date? = hasReminder ? reminderDate : nil
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
 
+        let targetTodo: TodoItem
         if let todo = todoToEdit {
             todo.title = cleanTitle
             todo.isCompleted = isCompleted
             todo.dueDate = finalDueDate
             todo.priority = priority
             todo.reminderDate = finalReminderDate
+            targetTodo = todo
         } else {
             let newTodo = TodoItem(
                 title: cleanTitle,
@@ -125,6 +127,15 @@ struct TodoDetailView: View {
                 reminderDate: finalReminderDate
             )
             modelContext.insert(newTodo)
+            targetTodo = newTodo
+        }
+
+        // Notification Integration
+        let notificationID = "todo-\(targetTodo.id.uuidString)"
+        if hasReminder && !isCompleted {
+            NotificationManager.shared.scheduleTodoReminder(for: targetTodo)
+        } else {
+            NotificationManager.shared.cancelNotification(id: notificationID)
         }
 
         dismiss()
@@ -132,6 +143,7 @@ struct TodoDetailView: View {
 
     private func deleteTodo() {
         if let todo = todoToEdit {
+            NotificationManager.shared.cancelNotification(id: "todo-\(todo.id.uuidString)")
             modelContext.delete(todo)
         }
         dismiss()
