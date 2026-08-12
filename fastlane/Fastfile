@@ -1,0 +1,57 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Run SwiftLint code analysis"
+  lane :lint do
+    swiftlint(
+      executable: "swiftlint",
+      strict: false
+    )
+  end
+
+  desc "Build the application"
+  lane :build_app do
+    xcodebuild(
+      project: "HolidayCalendar.xcodeproj",
+      scheme: "HolidayCalendar",
+      configuration: "Debug",
+      actions: ["build"],
+      destination: "platform=iOS Simulator,name=iPhone 16"
+    )
+  end
+
+  desc "Run unit tests"
+  lane :test do
+    scan(
+      project: "HolidayCalendar.xcodeproj",
+      scheme: "HolidayCalendar",
+      device: "iPhone 16",
+      clean: true
+    )
+  end
+
+  desc "Build and upload to App Store Connect / TestFlight"
+  lane :beta do
+    setup_ci if is_ci
+
+    # Fetch certificates and profiles
+    # match(type: "appstore", readonly: is_ci)
+
+    # Increment build number based on CI pipeline ID
+    increment_build_number(
+      build_number: ENV["CI_PIPELINE_IID"] || "1"
+    )
+
+    # Build app for distribution
+    build_app(
+      project: "HolidayCalendar.xcodeproj",
+      scheme: "HolidayCalendar",
+      export_method: "app-store"
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+end
