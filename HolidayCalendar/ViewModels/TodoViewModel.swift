@@ -1,3 +1,8 @@
 import Foundation
+import Observation
 
-/// TodoViewModel — Phase 5 မှာ implement လုပ်ပါမယ်
+/// TodoViewModel (Placeholder for Phase 5)
+@Observable
+final class TodoViewModel {
+    var todos: [TodoItem] = []
+}

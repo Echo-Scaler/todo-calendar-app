@@ -1,3 +1,8 @@
 import Foundation
+import Observation
 
-/// MemoViewModel — Phase 6 မှာ implement လုပ်ပါမယ်
+/// MemoViewModel (Placeholder for Phase 6)
+@Observable
+final class MemoViewModel {
+    var memos: [MemoItem] = []
+}
