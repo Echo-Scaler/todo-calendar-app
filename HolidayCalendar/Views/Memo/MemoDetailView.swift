@@ -1,8 +1,18 @@
 import SwiftUI
 
-/// Memo detail screen — Phase 6 မှာ implement လုပ်ပါမယ်
+/// MemoDetailView placeholder
+/// Rule 3.5: Empty placeholder view
 struct MemoDetailView: View {
     var body: some View {
-        Text("Memo Detail")
+        VStack {
+            Text("Memo Detail Placeholder")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .navigationTitle("Memo Detail")
     }
+}
+
+#Preview {
+    MemoDetailView()
 }

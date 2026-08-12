@@ -1,3 +1,8 @@
 import Foundation
+import Observation
 
-/// CalendarViewModel — Phase 3 မှာ implement လုပ်ပါမယ်
+/// CalendarViewModel (Placeholder for Phase 3)
+@Observable
+final class CalendarViewModel {
+    var selectedDate: Date = Date()
+}
