@@ -1,0 +1,648 @@
+# Holiday Calendar iOS App — Phase 1 & Phase 2 Implementation Plan
+
+## ရည်ရွယ်ချက် (Goal)
+
+Public holidays, festivals, Todo tasks, Memos တွေကို manage လုပ်နိုင်တဲ့ native iOS app တစ်ခု တည်ဆောက်ပါမယ်။ Phase 1 & 2 မှာ project setup နဲ့ Country system ကိုသာ ဦးစွာ implement လုပ်ပါမယ်။
+
+> [!IMPORTANT]
+> Backend (Laravel), API integration, Authentication စတာတွေကို ဒီ Phase မှာ မလုပ်ပါ။ Local iOS prototype ကိုသာ ဦးစွာ အလုပ်လုပ်အောင် ဆောက်ပါမယ်။
+
+---
+
+## Git Commit Strategy
+
+Step-by-step commit တွေ လုပ်သွားပါမယ်။ အောက်ပါ commits တွေကို အစဉ်လိုက် လုပ်ပါမယ်:
+
+| Commit # | Message | Description (မြန်မာ) |
+|----------|---------|----------------------|
+| 1 | `init: create Xcode project structure` | Xcode project နဲ့ folder structure ဖန်တီးမယ် |
+| 2 | `feat: add TabView with four tabs` | TabView ထည့်ပြီး Calendar, Todo, Memo, Settings tab ၄ ခု ဖန်တီးမယ် |
+| 3 | `feat: add placeholder screens` | Tab တစ်ခုစီအတွက် placeholder screen တွေ ဖန်တီးမယ် |
+| 4 | `feat: add Country data model` | Country model ဖန်တီးမယ် (SwiftData) |
+| 5 | `feat: add CountryViewModel with initial countries` | ViewModel ထဲမှာ နိုင်ငံ ၅ ခု define လုပ်ပြီး state management ထည့်မယ် |
+| 6 | `feat: add CountrySelectionView` | Country selection UI ဖန်တီးမယ် |
+| 7 | `feat: add country selection persistence` | AppStorage/SwiftData နဲ့ persistence ထည့်မယ် |
+| 8 | `feat: integrate country selection into Settings` | Settings screen ထဲကနေ CountrySelectionView ကို navigate လုပ်နိုင်အောင် ချိတ်ဆက်မယ် |
+
+---
+
+## Proposed Changes
+
+### Step 1 — Xcode Project Structure ဖန်တီးခြင်း
+
+#### ဘာလုပ်မလဲ (What)
+Xcode SwiftUI project ကို workspace directory ထဲမှာ ဖန်တီးပါမယ်။ Folder structure ကို spec အတိုင်း organize လုပ်ပါမယ်။
+
+#### ဘာကြောင့်လဲ (Why)
+Project structure ကို အစကတည်းက ကောင်းကောင်း organize လုပ်ထားရင် နောက်ပိုင်း Phase တွေမှာ code ထည့်ရတာ ပိုလွယ်ပါတယ်။ MVVM pattern ကို follow လုပ်ပါမယ်။
+
+#### ဘယ်လိုလုပ်မလဲ (How)
+Manual file creation — Xcode project file (.xcodeproj), Info.plist, App entry point စတာတွေ ဖန်တီးပါမယ်။
+
+#### [NEW] Project folder structure:
+```
+HolidayCalendar/
+├── HolidayCalendar.xcodeproj/
+│   └── project.pbxproj
+├── HolidayCalendar/
+│   ├── App/
+│   │   └── HolidayCalendarApp.swift          ← App entry point
+│   ├── Models/
+│   │   ├── Country.swift
+│   │   ├── Holiday.swift
+│   │   ├── Todo.swift
+│   │   └── Memo.swift
+│   ├── Views/
+│   │   ├── Calendar/
+│   │   │   ├── CalendarView.swift
+│   │   │   └── HolidayDetailView.swift
+│   │   ├── Countries/
+│   │   │   └── CountrySelectionView.swift
+│   │   ├── Todo/
+│   │   │   ├── TodoListView.swift
+│   │   │   └── TodoDetailView.swift
+│   │   ├── Memo/
+│   │   │   ├── MemoListView.swift
+│   │   │   └── MemoDetailView.swift
+│   │   └── Settings/
+│   │       └── SettingsView.swift
+│   ├── ViewModels/
+│   │   ├── CalendarViewModel.swift
+│   │   ├── CountryViewModel.swift
+│   │   ├── TodoViewModel.swift
+│   │   └── MemoViewModel.swift
+│   ├── Services/
+│   │   ├── HolidayService.swift
+│   │   ├── TodoService.swift
+│   │   └── MemoService.swift
+│   ├── Persistence/
+│   │   └── SwiftDataManager.swift
+│   ├── Network/
+│   │   ├── APIClient.swift
+│   │   └── APIError.swift
+│   └── Resources/
+│       └── Assets.xcassets/
+```
+
+> [!NOTE]
+> **Xcode project ကို command line ကနေ ဖန်တီးခြင်း**: Swift Package Manager project အစား Xcode project file (.xcodeproj) ကို manually generate လုပ်ပါမယ်။ ဒါမှ Xcode မှာ directly ဖွင့်ပြီး build/run လုပ်နိုင်မှာ ဖြစ်ပါတယ်။
+
+**Git Commit**: `git commit -m "init: create Xcode project structure"`
+
+---
+
+### Step 2 — TabView ဖန်တီးခြင်း
+
+#### ဘာလုပ်မလဲ (What)
+SwiftUI `TabView` ကိုသုံးပြီး main navigation ဖန်တီးပါမယ်။
+
+#### ဘာကြောင့်လဲ (Why)
+iOS app ရဲ့ main navigation pattern ဖြစ်တဲ့ Tab-based navigation ကိုသုံးပါမယ်။ Apple ရဲ့ native `TabView` က iOS user တွေအတွက် familiar ဖြစ်ပါတယ်။
+
+#### ဘယ်လိုလုပ်မလဲ (How)
+
+#### [MODIFY] [HolidayCalendarApp.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/App/HolidayCalendarApp.swift)
+
+```swift
+@main
+struct HolidayCalendarApp: App {
+    var body: some Scene {
+        WindowGroup {
+            MainTabView()
+        }
+    }
+}
+```
+
+#### [NEW] [MainTabView.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/Views/MainTabView.swift)
+
+Tab ၄ ခု ပါမယ်:
+- **Calendar** (SF Symbol: `calendar`) — Default selected tab
+- **Todo** (SF Symbol: `checkmark.circle`)
+- **Memo** (SF Symbol: `note.text`)
+- **Settings** (SF Symbol: `gearshape`)
+
+```swift
+struct MainTabView: View {
+    var body: some View {
+        TabView {
+            CalendarView()
+                .tabItem { Label("Calendar", systemImage: "calendar") }
+            TodoListView()
+                .tabItem { Label("Todo", systemImage: "checkmark.circle") }
+            MemoListView()
+                .tabItem { Label("Memo", systemImage: "note.text") }
+            SettingsView()
+                .tabItem { Label("Settings", systemImage: "gearshape") }
+        }
+    }
+}
+```
+
+**Git Commit**: `git commit -m "feat: add TabView with four tabs"`
+
+---
+
+### Step 3 — Placeholder Screens ဖန်တီးခြင်း
+
+#### ဘာလုပ်မလဲ (What)
+Tab တစ်ခုစီအတွက် basic placeholder views ဖန်တီးပါမယ်။
+
+#### ဘာကြောင့်လဲ (Why)
+App ကို build လုပ်ပြီး run နိုင်အောင် placeholder views လိုပါတယ်။ နောက် Phase တွေမှာ ဒီ views တွေကို ပြန်ပြင်ပါမယ်။
+
+#### ဘယ်လိုလုပ်မလဲ (How)
+
+#### [NEW] [CalendarView.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/Views/Calendar/CalendarView.swift)
+```swift
+struct CalendarView: View {
+    var body: some View {
+        NavigationStack {
+            Text("Calendar")
+                .navigationTitle("Calendar")
+        }
+    }
+}
+```
+
+#### [NEW] [TodoListView.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/Views/Todo/TodoListView.swift)
+```swift
+struct TodoListView: View {
+    var body: some View {
+        NavigationStack {
+            Text("Todo")
+                .navigationTitle("Todo")
+        }
+    }
+}
+```
+
+#### [NEW] [MemoListView.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/Views/Memo/MemoListView.swift)
+```swift
+struct MemoListView: View {
+    var body: some View {
+        NavigationStack {
+            Text("Memo")
+                .navigationTitle("Memo")
+        }
+    }
+}
+```
+
+#### [NEW] [SettingsView.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/Views/Settings/SettingsView.swift)
+```swift
+struct SettingsView: View {
+    var body: some View {
+        NavigationStack {
+            List {
+                NavigationLink("Countries") {
+                    CountrySelectionView()
+                }
+            }
+            .navigationTitle("Settings")
+        }
+    }
+}
+```
+
+**Git Commit**: `git commit -m "feat: add placeholder screens for all tabs"`
+
+---
+
+### Step 4 — Country Data Model ဖန်တီးခြင်း
+
+#### ဘာလုပ်မလဲ (What)
+`Country` model ကို ဖန်တီးပါမယ်။
+
+#### ဘာကြောင့်လဲ (Why)
+Country ကို data model အနေနဲ့ represent လုပ်ရင် — hard-coded boolean variables (isJapanSelected, isMyanmarSelected) မသုံးဘဲ — နောက်ပိုင်း China, Singapore, Vietnam စတဲ့ နိုင်ငံအသစ်တွေ ထပ်ထည့်ရတာ Calendar code ကို ပြန်မရေးရဘဲ ရပါတယ်။
+
+#### ဘယ်လိုလုပ်မလဲ (How)
+
+#### [NEW] [Country.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/Models/Country.swift)
+
+```swift
+import Foundation
+
+struct Country: Identifiable, Codable, Hashable {
+    let id: String          // UUID or country code
+    let code: String        // ISO 3166-1 alpha-2 (JP, MM, AU, KR, TH)
+    let name: String        // English name
+    let localName: String   // Local language name
+    let flag: String        // Emoji flag (🇯🇵, 🇲🇲, etc.)
+    var isSelected: Bool    // User's selection state
+    let timezone: String    // Primary timezone
+}
+```
+
+> [!IMPORTANT]
+> **Design Decision**: `Country` ကို `struct` (value type) အနေနဲ့ သုံးပါမယ်။ SwiftData `@Model` class မသုံးဘဲ `struct + AppStorage` approach ကို ရွေးပါတယ်။ အကြောင်းမှာ -
+> 1. Country list က static data (server ကမလာဘူး၊ app ထဲမှာ define ထားတာ)
+> 2. User ပြောင်းတာ `isSelected` property တစ်ခုထဲ
+> 3. SwiftData ကို Todo, Memo, Holiday data အတွက် သုံးပါမယ်
+> 4. Country selection state ကို `AppStorage` (UserDefaults) နဲ့ persist လုပ်တာ ပိုရိုးရှင်းပြီး သင့်တော်ပါတယ်
+
+**Data Flow**:
+```
+Country struct (static data)
+    +
+Selected country codes (Set<String>) ← AppStorage (persisted)
+    =
+Runtime Country list with isSelected computed
+```
+
+#### Initial Countries Data:
+
+| Name | Code | Flag | Local Name | Default Selected | Timezone |
+|------|------|------|------------|-----------------|----------|
+| Japan | JP | 🇯🇵 | 日本 | ✅ Yes | Asia/Tokyo |
+| Myanmar | MM | 🇲🇲 | မြန်မာ | ✅ Yes | Asia/Yangon |
+| Australia | AU | 🇦🇺 | Australia | ❌ No | Australia/Sydney |
+| Korea | KR | 🇰🇷 | 대한민국 | ❌ No | Asia/Seoul |
+| Thailand | TH | 🇹🇭 | ประเทศไทย | ✅ Yes | Asia/Bangkok |
+
+> [!NOTE]
+> **Korea = South Korea (KR)**။ North Korea မဟုတ်ပါ။ နောက်မှ North Korea ထည့်ချင်ရင် KP code နဲ့ သီးခြား country အနေနဲ့ ထည့်ပါမယ်။
+
+**Git Commit**: `git commit -m "feat: add Country data model"`
+
+---
+
+### Step 5 — CountryViewModel ဖန်တီးခြင်း
+
+#### ဘာလုပ်မလဲ (What)
+Country selection logic ကို manage လုပ်မယ့် ViewModel ဖန်တီးပါမယ်။
+
+#### ဘာကြောင့်လဲ (Why)
+UI logic ကို data/business logic ကနေ ခွဲခြားထားရပါမယ် (MVVM pattern)။ ViewModel က single source of truth ဖြစ်ပြီး CountrySelectionView ရော Calendar ရော ဒီ ViewModel ကိုပဲ reference လုပ်ပါမယ်။
+
+#### ဘယ်လိုလုပ်မလဲ (How)
+
+#### [NEW] [CountryViewModel.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/ViewModels/CountryViewModel.swift)
+
+```swift
+@Observable
+class CountryViewModel {
+    // All available countries (static list)
+    private(set) var countries: [Country]
+    
+    // Persisted selected country codes
+    private var selectedCodesStorage: Set<String> {
+        didSet { saveSelectedCodes() }
+    }
+    
+    // Computed: countries with isSelected reflecting user's choices
+    var countriesWithSelection: [Country] { ... }
+    
+    // Computed: only selected countries (for calendar filtering)
+    var selectedCountries: [Country] { ... }
+    
+    // Computed: selected country codes (for filtering holidays)
+    var selectedCountryCodes: Set<String> { ... }
+    
+    func toggleCountry(_ country: Country) { ... }
+    func selectAll() { ... }
+    func clearAll() { ... }
+    
+    // Persistence
+    private func loadSelectedCodes() -> Set<String> { ... }
+    private func saveSelectedCodes() { ... }
+}
+```
+
+**State Management Flow (အသေးစိတ်)**:
+
+```
+User taps toggle
+    ↓
+CountryViewModel.toggleCountry(country)
+    ↓
+selectedCodesStorage (Set<String>) updated
+    ↓
+@Observable triggers UI update
+    ↓
+CountrySelectionView re-renders (toggle reflects new state)
+    ↓
+CalendarView re-renders (shows/hides holidays for that country)
+    ↓
+saveSelectedCodes() → UserDefaults persists the change
+```
+
+> [!IMPORTANT]
+> **Single Source of Truth**: `CountryViewModel` ကို `@Observable` (iOS 17+ Observation framework) နဲ့ သုံးပါမယ်။ ViewModel တစ်ခုတည်းကို app-wide shared instance အနေနဲ့ Environment ကနေ inject လုပ်ပါမယ်။ ဒါမှ CountrySelectionView မှာ toggle ပြောင်းရင် Calendar မှာ ချက်ချင်း reflect ဖြစ်ပါမယ်။
+
+**Git Commit**: `git commit -m "feat: add CountryViewModel with initial countries and state management"`
+
+---
+
+### Step 6 — CountrySelectionView ဖန်တီးခြင်း
+
+#### ဘာလုပ်မလဲ (What)
+Country ရွေးချယ်ရန် UI screen ဖန်တီးပါမယ်။
+
+#### ဘာကြောင့်လဲ (Why)
+User က ဘယ်နိုင်ငံရဲ့ holidays တွေကို calendar ထဲမှာ ပြချင်တယ်ဆိုတာ ရွေးချယ်ရမယ်။
+
+#### ဘယ်လိုလုပ်မလဲ (How)
+
+#### [NEW] [CountrySelectionView.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/Views/Countries/CountrySelectionView.swift)
+
+```swift
+struct CountrySelectionView: View {
+    @Environment(CountryViewModel.self) private var viewModel
+    
+    var body: some View {
+        List {
+            // Select All / Clear All section
+            Section {
+                Button("Select All") { viewModel.selectAll() }
+                Button("Clear All") { viewModel.clearAll() }
+            }
+            
+            // Country list section
+            Section {
+                ForEach(viewModel.countriesWithSelection) { country in
+                    CountryRow(country: country) {
+                        viewModel.toggleCountry(country)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Countries")
+    }
+}
+```
+
+#### [NEW] CountryRow (within CountrySelectionView or separate file)
+
+Row တစ်ခုစီမှာ ပါမယ့် elements:
+- 🇯🇵 Country flag (emoji)
+- "Japan" Country name
+- Toggle switch (native SwiftUI `Toggle`)
+
+```swift
+struct CountryRow: View {
+    let country: Country
+    let onToggle: () -> Void
+    
+    var body: some View {
+        HStack {
+            Text(country.flag)
+                .font(.title2)
+            Text(country.name)
+            Spacer()
+            Toggle("", isOn: ...)
+                .labelsHidden()
+        }
+        .contentShape(Rectangle())  // Row တစ်ခုလုံး tap နိုင်အောင်
+        .onTapGesture { onToggle() }
+    }
+}
+```
+
+> [!NOTE]
+> Row တစ်ခုလုံးကို tap လုပ်လို့ ရပါတယ်။ Toggle ကိုပဲ tap လုပ်စရာ မလိုပါ။ `.contentShape(Rectangle())` ကြောင့် row ရဲ့ ဘယ်နေရာကိုပဲ tap tap toggle ပြောင်းပါမယ်။
+
+**Git Commit**: `git commit -m "feat: add CountrySelectionView with toggle UI"`
+
+---
+
+### Step 7 — Country Selection Persistence ထည့်ခြင်း
+
+#### ဘာလုပ်မလဲ (What)
+Country selection state ကို app ပိတ်ပြီး ပြန်ဖွင့်ရင် ပြန်ရအောင် persist လုပ်ပါမယ်။
+
+#### ဘာကြောင့်လဲ (Why)
+User က Myanmar ကို OFF လုပ်ပြီး Australia ကို ON လုပ်ထားရင် — app ပိတ်ပြီး ပြန်ဖွင့်ရင် ဒီ state ပြန်ရရမယ်။ မဟုတ်ရင် user experience ညံ့ပါတယ်။
+
+#### ဘယ်လိုလုပ်မလဲ (How)
+
+**Persistence Strategy**:
+
+```
+UserDefaults (via AppStorage-compatible approach)
+    ↓
+Key: "selectedCountryCodes"
+Value: JSON encoded Set<String> — e.g. ["JP", "MM", "TH"]
+```
+
+CountryViewModel ထဲမှာ:
+
+```swift
+private let selectedCodesKey = "selectedCountryCodes"
+
+private func loadSelectedCodes() -> Set<String> {
+    guard let data = UserDefaults.standard.data(forKey: selectedCodesKey),
+          let codes = try? JSONDecoder().decode(Set<String>.self, from: data) else {
+        // First launch: return default selections
+        return ["JP", "MM", "TH"]
+    }
+    return codes
+}
+
+private func saveSelectedCodes() {
+    if let data = try? JSONEncoder().encode(selectedCodesStorage) {
+        UserDefaults.standard.set(data, forKey: selectedCodesKey)
+    }
+}
+```
+
+**Persistence Flow**:
+
+```
+App Launch
+    ↓
+CountryViewModel.init()
+    ↓
+loadSelectedCodes() from UserDefaults
+    ↓
+If first launch → return defaults: ["JP", "MM", "TH"]
+If returning user → return saved codes: e.g. ["JP", "AU", "KR"]
+    ↓
+countries list populated with correct isSelected values
+    ↓
+UI renders correctly
+
+User changes toggle
+    ↓
+selectedCodesStorage updated
+    ↓
+saveSelectedCodes() → UserDefaults
+    ↓
+Data persisted ✅
+```
+
+> [!TIP]
+> **ဘာကြောင့် UserDefaults သုံးတာလဲ**: Country selection က ရိုးရှင်းတဲ့ user preference ဖြစ်ပါတယ် (country code ၅-၁၀ ခုလောက်ပဲ save ရတာ)။ SwiftData သုံးဖို့ ရှုပ်ထွေးလွန်ပါတယ်။ SwiftData ကို Todo, Memo, Holiday data တွေအတွက် သုံးပါမယ်။
+
+**Git Commit**: `git commit -m "feat: add country selection persistence with UserDefaults"`
+
+---
+
+### Step 8 — Settings Integration ချိတ်ဆက်ခြင်း
+
+#### ဘာလုပ်မလဲ (What)
+Settings screen ကနေ CountrySelectionView ကို navigate လုပ်နိုင်အောင် ချိတ်ဆက်ပါမယ်။ CountryViewModel ကို app-wide EnvironmentObject အနေနဲ့ inject လုပ်ပါမယ်။
+
+#### ဘာကြောင့်လဲ (Why)
+ViewModel ကို app level မှာ inject လုပ်ရင် — Settings ကရော Calendar ကရော တစ်ချိန်တည်းမှာ same data ကို access လုပ်နိုင်ပါတယ်။
+
+#### ဘယ်လိုလုပ်မလဲ (How)
+
+#### [MODIFY] [HolidayCalendarApp.swift](file:///Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/HolidayCalendar/App/HolidayCalendarApp.swift)
+
+```swift
+@main
+struct HolidayCalendarApp: App {
+    @State private var countryViewModel = CountryViewModel()
+    
+    var body: some Scene {
+        WindowGroup {
+            MainTabView()
+                .environment(countryViewModel)
+        }
+    }
+}
+```
+
+**Data Flow Diagram**:
+
+```mermaid
+graph TD
+    A["HolidayCalendarApp"] -->|".environment()"| B["CountryViewModel<br/>(Single Source of Truth)"]
+    B --> C["MainTabView"]
+    C --> D["CalendarView<br/>reads selectedCountries"]
+    C --> E["TodoListView"]
+    C --> F["MemoListView"]
+    C --> G["SettingsView"]
+    G -->|"NavigationLink"| H["CountrySelectionView<br/>toggles country selection"]
+    H -->|"toggleCountry()"| B
+    B -->|"@Observable update"| D
+    B -->|"saveSelectedCodes()"| I["UserDefaults<br/>(Persistence)"]
+    I -->|"loadSelectedCodes()"| B
+```
+
+**Git Commit**: `git commit -m "feat: integrate CountryViewModel as environment object and connect Settings"`
+
+---
+
+## Architecture Overview (ဗိသုကာ အကျဉ်းချုပ်)
+
+### MVVM Pattern
+
+```
+┌─────────────────────────────────────────────────────┐
+│                       VIEW                          │
+│  CountrySelectionView  │  CalendarView  │  Settings │
+│         ↕                     ↕              ↕      │
+├─────────────────────────────────────────────────────┤
+│                    VIEW MODEL                       │
+│              CountryViewModel (@Observable)         │
+│  - countries: [Country]                             │
+│  - selectedCountryCodes: Set<String>                │
+│  - toggleCountry(), selectAll(), clearAll()         │
+│         ↕                                           │
+├─────────────────────────────────────────────────────┤
+│                      MODEL                          │
+│              Country (struct, Codable)               │
+│         ↕                                           │
+├─────────────────────────────────────────────────────┤
+│                   PERSISTENCE                       │
+│              UserDefaults (selected codes)           │
+│              SwiftData (Todo, Memo, Holiday)         │
+└─────────────────────────────────────────────────────┘
+```
+
+### Country Selection → Calendar Filtering (နောက် Phase အတွက်)
+
+```
+CountryViewModel.selectedCountryCodes
+    ↓
+CalendarViewModel uses selectedCountryCodes
+    ↓
+Filter holidays: holiday.countryCode IN selectedCountryCodes
+    ↓
+Display filtered holidays on calendar
+```
+
+ဒီ architecture ကြောင့် နိုင်ငံအသစ် ထပ်ထည့်ရင် Calendar code ကို ပြန်မရေးရပါဘူး။ Country list ထဲ ထပ်ထည့်လိုက်ယုံပါပဲ။
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **iOS Minimum Deployment Target**: iOS 17+ ကို target လုပ်ပါမယ် (`@Observable` macro သုံးဖို့)။ iOS 16 support လိုရင် `ObservableObject + @Published` ကို သုံးရပါမယ်။ iOS 17+ OK ပါသလား?
+
+> [!NOTE]
+> **Xcode Project Generation**: Xcode CLI tools (xcodebuild) ကနေ project generate လုပ်ပါမယ်။ သို့မဟုတ် Swift files တွေကို manually ဖန်တီးပြီး Xcode မှာ ဖွင့်ရပါမယ်။ ဘယ်နည်းလမ်း ကြိုက်ပါသလဲ?
+
+---
+
+## Verification Plan
+
+### Manual Verification (Step-by-step)
+
+Phase 1 & 2 ပြီးရင် test လုပ်ရမယ့် items:
+
+1. **App Launch**: App ကို Xcode Simulator မှာ run ပါ → TabView ၄ tab ပေါ်ရမယ်
+2. **Tab Navigation**: Tab တစ်ခုစီကို tap ပါ → correct screen ပေါ်ရမယ်
+3. **Calendar Default**: App ဖွင့်ရင် Calendar tab ကို default select ထားရမယ်
+4. **Settings → Countries**: Settings tab → Countries tap ပါ → CountrySelectionView ပေါ်ရမယ်
+5. **Initial State**: Country list ပေါ်ရမယ်:
+   - ☑ 🇯🇵 Japan
+   - ☑ 🇲🇲 Myanmar
+   - ☐ 🇦🇺 Australia
+   - ☐ 🇰🇷 Korea
+   - ☑ 🇹🇭 Thailand
+6. **Toggle**: Australia toggle ကို ON လုပ်ပါ → ချက်ချင်း ON ဖြစ်ရမယ်
+7. **Toggle Off**: Japan toggle ကို OFF လုပ်ပါ → ချက်ချင်း OFF ဖြစ်ရမယ်
+8. **Persistence Test**:
+   - Myanmar OFF, Australia ON, Korea ON ပြောင်းပါ
+   - App ကို completely kill လုပ်ပါ (Simulator မှာ swipe up)
+   - App ကို ပြန်ဖွင့်ပါ
+   - State ပြန်ရရမယ်: Japan ON, Myanmar OFF, Australia ON, Korea ON, Thailand ON
+9. **Select All**: "Select All" button tap ပါ → အားလုံး ON ဖြစ်ရမယ်
+10. **Clear All**: "Clear All" button tap ပါ → အားလုံး OFF ဖြစ်ရမယ်
+11. **Row Tap**: Toggle ကိုမတို့ဘဲ row ကိုပဲ tap ပါ → toggle ပြောင်းရမယ်
+
+### Build Verification
+
+```bash
+# Xcode build စစ်ရန်
+xcodebuild -project HolidayCalendar.xcodeproj \
+  -scheme HolidayCalendar \
+  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  build
+```
+
+---
+
+## Files Created Summary
+
+| # | File | Purpose (ရည်ရွယ်ချက်) |
+|---|------|------------------------|
+| 1 | `HolidayCalendarApp.swift` | App entry point, ViewModel inject |
+| 2 | `MainTabView.swift` | Tab navigation (4 tabs) |
+| 3 | `Country.swift` | Country data model |
+| 4 | `Holiday.swift` | Holiday data model (placeholder) |
+| 5 | `Todo.swift` | Todo data model (placeholder) |
+| 6 | `Memo.swift` | Memo data model (placeholder) |
+| 7 | `CalendarView.swift` | Calendar screen placeholder |
+| 8 | `HolidayDetailView.swift` | Holiday detail placeholder |
+| 9 | `CountrySelectionView.swift` | Country selection UI |
+| 10 | `TodoListView.swift` | Todo list placeholder |
+| 11 | `TodoDetailView.swift` | Todo detail placeholder |
+| 12 | `MemoListView.swift` | Memo list placeholder |
+| 13 | `MemoDetailView.swift` | Memo detail placeholder |
+| 14 | `SettingsView.swift` | Settings with Countries link |
+| 15 | `CountryViewModel.swift` | Country state management |
+| 16 | `CalendarViewModel.swift` | Calendar state (placeholder) |
+| 17 | `TodoViewModel.swift` | Todo state (placeholder) |
+| 18 | `MemoViewModel.swift` | Memo state (placeholder) |
+| 19 | `HolidayService.swift` | Holiday service (placeholder) |
+| 20 | `TodoService.swift` | Todo service (placeholder) |
+| 21 | `MemoService.swift` | Memo service (placeholder) |
+| 22 | `SwiftDataManager.swift` | SwiftData config (placeholder) |
+| 23 | `APIClient.swift` | API client (placeholder) |
+| 24 | `APIError.swift` | API error types (placeholder) |
