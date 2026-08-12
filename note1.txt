@@ -649,5 +649,5 @@ xcodebuild -project HolidayCalendar.xcodeproj \
 
 
 
+Step 2 ✅ ပြီးပါပြီ! အခု Step 3: Placeholder Screens ကို implement လုပ်ပါမယ်:
 
-if there is no need ,remove the folder HolidayCalendar because there are two folder of same name 
