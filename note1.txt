@@ -650,4 +650,4 @@ xcodebuild -project HolidayCalendar.xcodeproj \
 
 
 
-if there is no need remove Holiday
+if there is no need ,remove the folder HolidayCalendar because there are two folder of same name 
