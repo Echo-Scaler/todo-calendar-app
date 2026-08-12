@@ -46,7 +46,9 @@ Implementation လုပ်တဲ့အခါ ဒီ rules တွေကို �
 ## Step 1 Rules: Xcode Project Structure ဖန်တီးခြင်း
 
 ### Rule 1.1: Project Location
-- Project ကို `/Users/kyawwaiyan/Desktop/todo-calendar-app/HolidayCalendar/` ထဲမှာ ဖန်တီးရမယ်
+- Project root: `/Users/kyawwaiyan/Desktop/todo-calendar-app/`
+- `.xcodeproj` ကို project root ထဲမှာ ထားရမယ်
+- Source code ကို `HolidayCalendar/` folder ထဲမှာ ထားရမယ် (folder တစ်ခုထဲ — duplicate folder name မရှိရ)
 - Project name: `HolidayCalendar`
 
 ### Rule 1.2: Folder Structure
