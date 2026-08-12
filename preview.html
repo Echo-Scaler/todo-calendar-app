@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holiday Calendar — Interactive iOS Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-system: #F2F2F7;
+      --bg-card: #FFFFFF;
+      --text-primary: #000000;
+      --text-secondary: #8E8E93;
+      --accent: #007AFF;
+      --accent-hover: #0056B3;
+      --border-color: #E5E5EA;
+      --toggle-bg-off: #E9E9EA;
+      --toggle-bg-on: #34C759;
+      --nav-bg: rgba(249, 249, 249, 0.85);
+      --tab-bg: rgba(249, 249, 249, 0.85);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      --device-border: #2C2C2E;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-system: #000000;
+        --bg-card: #1C1C1E;
+        --text-primary: #FFFFFF;
+        --text-secondary: #8E8E93;
+        --border-color: #2C2C2E;
+        --toggle-bg-off: #3A3A3C;
+        --nav-bg: rgba(28, 28, 30, 0.85);
+        --tab-bg: rgba(28, 28, 30, 0.85);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #121214;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: var(--text-primary);
+      padding: 20px;
+    }
+
+    .header-banner {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #F5F5F7;
+    }
+
+    .header-banner h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #64D2FF 0%, #0A84FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-banner p {
+      font-size: 14px;
+      color: #98989D;
+    }
+
+    /* iPhone Frame Mockup */
+    .phone-container {
+      width: 390px;
+      height: 844px;
+      background-color: var(--bg-system);
+      border-radius: 48px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5), inset 0 0 0 2px #3A3A3C;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Dynamic Island Notch */
+    .phone-notch {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 32px;
+      background-color: #000;
+      border-radius: 20px;
+      z-index: 100;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 48px;
+      padding: 14px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      z-index: 90;
+    }
+
+    /* Main View Stack */
+    .view-content {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      background-color: var(--bg-system);
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      height: 54px;
+      background-color: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 0.5px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+      flex: 1;
+    }
+
+    .nav-button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 400;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Tab Content Styling */
+    .screen-body {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .large-title {
+      font-size: 34px;
+      font-weight: 700;
+      margin: 8px 0 16px;
+      letter-spacing: -0.5px;
+    }
+
+    /* List Components */
+    .list-group {
+      background-color: var(--bg-card);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .list-header {
+      font-size: 13px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin: 16px 16px 6px;
+      letter-spacing: -0.1px;
+    }
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 0.5px solid var(--border-color);
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .list-row:last-child {
+      border-bottom: none;
+    }
+
+    .list-row:active {
+      background-color: rgba(0,0,0,0.05);
+    }
+
+    .row-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .flag-emoji {
+      font-size: 26px;
+    }
+
+    .row-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .row-title {
+      font-size: 17px;
+      font-weight: 400;
+    }
+
+    .row-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Native iOS Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 51px;
+      height: 31px;
+      background-color: var(--toggle-bg-off);
+      border-radius: 31px;
+      transition: background-color 0.25s ease;
+      cursor: pointer;
+    }
+
+    .toggle-switch.active {
+      background-color: var(--toggle-bg-on);
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 27px;
+      height: 27px;
+      background-color: #FFFFFF;
+      border-radius: 50%;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 1px rgba(0, 0, 0, 0.06);
+      transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    .toggle-switch.active .toggle-knob {
+      transform: translateX(20px);
+    }
+
+    /* Action Buttons (Select All / Clear All) */
+    .action-row {
+      display: flex;
+      justify-content: space-around;
+      padding: 12px;
+      background-color: var(--bg-card);
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .btn-action {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+
+    .btn-action:hover {
+      background-color: rgba(0, 122, 255, 0.08);
+    }
+
+    /* Tab Bar */
+    .tab-bar {
+      height: 83px;
+      background-color: var(--tab-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 0.5px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 8px;
+      z-index: 90;
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .tab-item.active {
+      color: var(--accent);
+    }
+
+    .tab-icon {
+      font-size: 22px;
+    }
+
+    .tab-label {
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    /* Cards & Badges in Calendar */
+    .country-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .chip {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .placeholder-box {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      padding: 32px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+      border: 1px dashed var(--border-color);
+      margin-top: 20px;
+    }
+
+    .chevron {
+      color: var(--text-secondary);
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-banner">
+    <h1>Holiday Calendar — iOS Simulator Preview</h1>
+    <p>Phase 1 & Phase 2 Implementation • Reacts to local storage persistence</p>
+  </div>
+
+  <div class="phone-container">
+    <div class="phone-notch"></div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>📶 📡 🔋</span>
+    </div>
+
+    <!-- View Content Screens Stack -->
+    <div class="view-content">
+
+      <!-- 1. CALENDAR TAB -->
+      <div id="screen-calendar" class="screen active">
+        <div class="screen-body">
+          <div class="large-title">Calendar</div>
+          
+          <div class="list-header">Active Selected Countries</div>
+          <div id="calendar-country-chips" class="country-chips">
+            <!-- Dynamically Rendered Chips -->
+          </div>
+
+          <div class="placeholder-box">
+            <div style="font-size: 40px; margin-bottom: 12px;">📅</div>
+            <h3 style="color: var(--text-primary); margin-bottom: 6px;">Calendar View</h3>
+            <p style="font-size: 13px;">Holidays filter automatically based on your selected countries in Settings.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. TODO TAB -->
+      <div id="screen-todo" class="screen">
+        <div class="screen-body">
+          <div class="large-title">Todo</div>
+          <div class="placeholder-box">
+            <div style="font-size: 40px; margin-bottom: 12px;">☑️</div>
+            <h3 style="color: var(--text-primary); margin-bottom: 6px;">Todo List</h3>
+            <p style="font-size: 13px;">Todo feature placeholder view (Phase 5 implementation)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. MEMO TAB -->
+      <div id="screen-memo" class="screen">
+        <div class="screen-body">
+          <div class="large-title">Memo</div>
+          <div class="placeholder-box">
+            <div style="font-size: 40px; margin-bottom: 12px;">📝</div>
+            <h3 style="color: var(--text-primary); margin-bottom: 6px;">Memos</h3>
+            <p style="font-size: 13px;">Memo notes placeholder view (Phase 6 implementation)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. SETTINGS TAB -->
+      <div id="screen-settings" class="screen">
+        <div class="screen-body">
+          <div class="large-title">Settings</div>
+
+          <div class="list-header">Preferences</div>
+          <div class="list-group">
+            <div class="list-row" onclick="navigateTo('screen-country-selection')">
+              <div class="row-left">
+                <span style="font-size: 22px;">🌐</span>
+                <div class="row-text">
+                  <span class="row-title">Countries</span>
+                  <span id="selected-count-subtitle" class="row-subtitle">3 selected</span>
+                </div>
+              </div>
+              <span class="chevron">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. COUNTRY SELECTION DETAIL SCREEN -->
+      <div id="screen-country-selection" class="screen">
+        <div class="nav-bar">
+          <button class="nav-button" onclick="navigateTo('screen-settings')">
+            <span>‹ Settings</span>
+          </button>
+          <span class="nav-title">Countries</span>
+          <div style="width: 60px;"></div>
+        </div>
+        <div class="screen-body">
+          <div class="action-row">
+            <button class="btn-action" onclick="selectAllCountries()">Select All</button>
+            <span style="color: var(--border-color);">|</span>
+            <button class="btn-action" onclick="clearAllCountries()">Clear All</button>
+          </div>
+
+          <div class="list-header">Available Countries</div>
+          <div id="country-list-container" class="list-group">
+            <!-- Dynamically populated country rows -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="tab-item active" onclick="switchTab('screen-calendar', this)">
+        <span class="tab-icon">📅</span>
+        <span class="tab-label">Calendar</span>
+      </button>
+      <button class="tab-item" onclick="switchTab('screen-todo', this)">
+        <span class="tab-icon">☑️</span>
+        <span class="tab-label">Todo</span>
+      </button>
+      <button class="tab-item" onclick="switchTab('screen-memo', this)">
+        <span class="tab-icon">📝</span>
+        <span class="tab-label">Memo</span>
+      </button>
+      <button class="tab-item" onclick="switchTab('screen-settings', this)">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">Settings</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Initial Master Country Dataset (Rule 4.4)
+    const ALL_COUNTRIES = [
+      { id: 'JP', code: 'JP', name: 'Japan', localName: '日本', flag: '🇯🇵', timezone: 'Asia/Tokyo' },
+      { id: 'MM', code: 'MM', name: 'Myanmar', localName: 'မြန်မာ', flag: '🇲🇲', timezone: 'Asia/Yangon' },
+      { id: 'AU', code: 'AU', name: 'Australia', localName: 'Australia', flag: '🇦🇺', timezone: 'Australia/Sydney' },
+      { id: 'KR', code: 'KR', name: 'Korea', localName: '대한민국', flag: '🇰🇷', timezone: 'Asia/Seoul' },
+      { id: 'TH', code: 'TH', name: 'Thailand', localName: 'ประเทศไทย', flag: '🇹🇭', timezone: 'Asia/Bangkok' }
+    ];
+
+    // Default Selection State (Rule 5.8: JP, MM, TH)
+    const DEFAULT_CODES = ['JP', 'MM', 'TH'];
+    const STORAGE_KEY = 'selectedCountryCodes';
+
+    // State Manager (Simulating Swift CountryViewModel)
+    let selectedCodesStorage = loadSelectedCodes();
+
+    function loadSelectedCodes() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          return new Set(JSON.parse(stored));
+        } catch (e) {
+          console.error('Error loading stored codes', e);
+        }
+      }
+      return new Set(DEFAULT_CODES);
+    }
+
+    function saveSelectedCodes() {
+      const arr = Array.from(selectedCodesStorage);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+      renderUI();
+    }
+
+    function toggleCountry(code) {
+      if (selectedCodesStorage.has(code)) {
+        selectedCodesStorage.delete(code);
+      } else {
+        selectedCodesStorage.add(code);
+      }
+      saveSelectedCodes();
+    }
+
+    function selectAllCountries() {
+      ALL_COUNTRIES.forEach(c => selectedCodesStorage.add(c.code));
+      saveSelectedCodes();
+    }
+
+    function clearAllCountries() {
+      selectedCodesStorage.clear();
+      saveSelectedCodes();
+    }
+
+    // UI Renderers
+    function renderUI() {
+      // 1. Render Country Selection List
+      const container = document.getElementById('country-list-container');
+      container.innerHTML = ALL_COUNTRIES.map(country => {
+        const isSelected = selectedCodesStorage.has(country.code);
+        return `
+          <div class="list-row" onclick="toggleCountry('${country.code}')">
+            <div class="row-left">
+              <span class="flag-emoji">${country.flag}</span>
+              <div class="row-text">
+                <span class="row-title">${country.name}</span>
+                <span class="row-subtitle">${country.localName}</span>
+              </div>
+            </div>
+            <div class="toggle-switch ${isSelected ? 'active' : ''}">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 2. Render Calendar Country Chips
+      const chipsContainer = document.getElementById('calendar-country-chips');
+      const selectedList = ALL_COUNTRIES.filter(c => selectedCodesStorage.has(c.code));
+      if (selectedList.length === 0) {
+        chipsContainer.innerHTML = `<span style="font-size: 13px; color: var(--text-secondary);">No countries selected</span>`;
+      } else {
+        chipsContainer.innerHTML = selectedList.map(c => `
+          <div class="chip">
+            <span>${c.flag}</span>
+            <span>${c.name}</span>
+          </div>
+        `).join('');
+      }
+
+      // 3. Update Settings Subtitle
+      document.getElementById('selected-count-subtitle').innerText = `${selectedList.length} of ${ALL_COUNTRIES.length} selected`;
+    }
+
+    // Navigation & Tab Switchers
+    function switchTab(screenId, tabBtn) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      
+      document.getElementById(screenId).classList.add('active');
+      tabBtn.classList.add('active');
+    }
+
+    function navigateTo(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    // Initialize on Load
+    renderUI();
+  </script>
+</body>
+</html>
